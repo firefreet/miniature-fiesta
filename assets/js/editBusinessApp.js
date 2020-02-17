@@ -45,7 +45,7 @@ async function viewEmployees(by) {
         // ask user which department to filter on
         var dept = await getEntity("department");
         // create string to add to query which will do filtering
-        where = ` WHERE department.deptname = "${dept.name}"`
+        where = ` WHERE department.deptname = "${dept.deptname}"`
     }
     // call query of employee database
     var data = await query(`SELECT employee.id AS empID, employee.first_name, 
@@ -79,7 +79,7 @@ async function getEntity(type) {
         switch (type) {
             case "role": return (`ID:${value.id}: Role > ${value.title}`);
             case "department": return (`ID:${value.id}: ${value.deptname}`);
-            case "employee": return (`ID:${value.id}: ${value.last_name}`);
+            case "employee": return (`ID:${value.id}: ${value.last_name},${value.first_name}`);
         }
     });
     // update inquirer question list of choices and message
@@ -126,7 +126,7 @@ async function addRole() {
 
 async function addDepartment() {
     await inquirer.prompt(questions.addDepartmentQuestion).then(async answers => {
-        await query("INSERT INTO department (`name`) VALUES (?)", [answers.deptName])
+        await query("INSERT INTO department (`deptname`) VALUES (?)", [answers.deptName])
         displ("Added " + answers.deptName);
     });
 };
@@ -158,8 +158,7 @@ async function updateEntity(type, field, isTable, isString) {
         displ(`UPDATE ${type} SET ${field} = ${fieldValue} WHERE ID = ${entity.id}`)
         var resp = await query(`UPDATE ${type} SET ${field} = ? WHERE ID = ${entity.id}`,fieldValue)
     }
-
-    displ(`Updated ${type} with new ${field}`)
+    displ(`Updated ${type} with new ${field}: `)
 }
 
 
