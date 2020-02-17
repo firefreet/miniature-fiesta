@@ -18,23 +18,31 @@ var toDoQuestion = [
             // 'View all employees by manager',
             'Add employee',
             'Remove employee',
-            // 'Update employee role',
+            'Update employee role',
             // 'Update employee manager',
             // 'Update employee department',
             'View all roles',
             'Add role',
             'Remove role',
-            // 'Update role title',
-            // 'Update role salary',
+            'Update role department',
+            'Update role salary',
             'View all departments',
             'Add department',
             'Remove department',
-            // 'Update department name',
+            'Update department name',
             // 'View department total employee salary',
             'End'
         ]
     }
 ];
+
+var updateQ = [
+    {
+        type: "input",
+        message: "",
+        name: "fieldValue"
+    }
+]
 
 var addEmployeeQuestion = [
     {
@@ -88,5 +96,7 @@ module.exports = {
     toDoQuestion: toDoQuestion,
     addDepartmentQuestion: addDepartmentQuestion,
     addRoleQs: addRoleQs,
-    getChoice: getChoice
+    getChoice: getChoice,
+    updateQ: updateQ,
+    stringLength: stringLength
 }

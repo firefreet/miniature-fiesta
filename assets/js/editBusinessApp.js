@@ -23,6 +23,13 @@ function displ(content) {
     console.log("\n   >>>>>>   " + content + "\n")
 }
 
+function numValidation(input){
+    if (Number.isNaN(input))  {
+        return "Please enter a number"
+    } 
+    return true
+}
+
 // wrap table logging in newlines
 function table(content) {
     console.log("\n");
@@ -38,12 +45,12 @@ async function viewEmployees(by) {
         // ask user which department to filter on
         var dept = await getEntity("department");
         // create string to add to query which will do filtering
-        where = ` WHERE department.name = "${dept.name}"`
+        where = ` WHERE department.deptname = "${dept.name}"`
     }
     // call query of employee database
     var data = await query(`SELECT employee.id AS empID, employee.first_name, 
         employee.last_name, employee.manager_id, role.title, role.salary, 
-        department.name FROM employee LEFT JOIN role ON employee.role_id = role.id 
+        department.deptname FROM employee LEFT JOIN role ON employee.role_id = role.id 
         LEFT JOIN department ON role.department_id = department.id ${where}`);
     // display returned values
     table(data);
@@ -52,7 +59,7 @@ async function viewEmployees(by) {
 // displays table of Roles
 async function viewRoles() {
     var data = await query(`SELECT role.id AS RoleID, role.title, 
-    role.salary, department.id AS DeptID, department.name 
+    role.salary, department.id AS DeptID, department.deptname AS DeptName
     FROM role LEFT JOIN department ON role.department_id = department.id`);
     table(data);
 }
@@ -71,7 +78,7 @@ async function getEntity(type) {
     var choiceList = records.map(value => {
         switch (type) {
             case "role": return (`ID:${value.id}: Role > ${value.title}`);
-            case "department": return (`ID:${value.id}: ${value.name}`);
+            case "department": return (`ID:${value.id}: ${value.deptname}`);
             case "employee": return (`ID:${value.id}: ${value.last_name}`);
         }
     });
@@ -94,7 +101,7 @@ async function getEntity(type) {
 
 async function addEmployee() {
     var answers = await inquirer.prompt(questions.addEmployeeQuestion);
-    var {id} = await getEntity('role');
+    var { id } = await getEntity('role');
     await query("INSERT INTO employee (first_name,last_name,role_id) VALUES (?,?,?)",
         [
             answers.first_name,
@@ -131,6 +138,30 @@ async function removeEntity(type) {
     displ(`Removed ${type} with ID ${entity.id}`);
 };
 
+async function updateEntity(type, field, isTable, isString) {
+    var entity = await getEntity(type);
+    if (isTable) {
+        var fieldValue = await getEntity(field)
+        var resp = await query(`UPDATE ${type} SET ${field}_id = ${fieldValue.id} WHERE ID = ${entity.id}`)
+    } else {
+        fieldQ = questions.updateQ[0]
+        if(!isString) {
+            fieldQ.type = "number"
+            fieldQ.validate = numValidation
+        } else { 
+            fieldQ.type = "input"
+            fieldQ.validate = questions.stringLength
+            fieldValue = "'" + fieldValue + "'"
+        }
+        fieldQ.message = `Please enter a new ${field} for the ${type}`
+        var { fieldValue } = await inquirer.prompt(fieldQ)
+        displ(`UPDATE ${type} SET ${field} = ${fieldValue} WHERE ID = ${entity.id}`)
+        var resp = await query(`UPDATE ${type} SET ${field} = ? WHERE ID = ${entity.id}`,fieldValue)
+    }
+
+    displ(`Updated ${type} with new ${field}`)
+}
+
 
 function startQs() {
     inquirer.prompt(questions.toDoQuestion)
@@ -145,17 +176,25 @@ function startQs() {
                     break;
                 case "Remove employee": await removeEntity(`employee`);
                     break;
+                case "Update employee role": await updateEntity(`employee`, `role`, true)
+                    break;
                 case "View all roles": await viewRoles();
                     break;
                 case "Add role": await addRole();
                     break;
                 case "Remove role": await removeEntity(`role`);
                     break;
+                case "Update role department": await updateEntity(`role`, `department`, true)
+                    break;
+                case "Update role salary": await updateEntity(`role`, `salary`, false, false)
+                    break;
                 case "View all departments": await viewDepts();
                     break;
                 case 'Add department': await addDepartment();
                     break;
                 case 'Remove department': await removeEntity('department');
+                    break;
+                case "Update department name": await updateEntity(`department`,`deptname`,false,true)
                     break;
                 case "End": conn.end();
                 default: moreQs = false
