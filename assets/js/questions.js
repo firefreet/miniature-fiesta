@@ -1,8 +1,15 @@
 // validation for strings to ensure <= 30 characters, since DB is set up that way
 function stringLength(answer){
-    if(answer.length >30) return "Must be less than 30 Characters"
+    if(answer.length >30 || answer.length < 1) return "Please enter a valid response between 1 and 30 characters"
     return true
 }
+function numValidation(input) {
+    if (Number.isNaN(input)) {
+        return "Please enter a number"
+    }
+    return true
+}
+
 
 var toDoQuestion = [
     {
@@ -15,11 +22,11 @@ var toDoQuestion = [
 
             "View all employees",
             'View all employees by department',
-            // 'View all employees by manager',
+            'View all employees by manager',
             'Add employee',
             'Remove employee',
             'Update employee role',
-            // 'Update employee manager',
+            'Update employee manager',
             // 'Update employee department',
             'View all roles',
             'Add role',
@@ -78,7 +85,8 @@ var addRoleQs = [
     {
         type: 'number',
         message: 'What is the role\'s salary?',
-        name: 'salary'
+        name: 'salary',
+        validate: numValidation
     }
 ]
 
@@ -98,5 +106,6 @@ module.exports = {
     addRoleQs: addRoleQs,
     getChoice: getChoice,
     updateQ: updateQ,
-    stringLength: stringLength
+    stringLength: stringLength,
+    numValidation: numValidation
 }
