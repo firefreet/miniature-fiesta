@@ -27,6 +27,8 @@ var toDoQuestion = [
             'Remove employee',
             'Update employee role',
             'Update employee manager',
+            // to do this one, have to select only depts with an associated role, 
+            // and have to then choose one of those roles... not sure I care that much.
             // 'Update employee department',
             'View all roles',
             'Add role',

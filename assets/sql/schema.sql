@@ -1,4 +1,4 @@
--- CREATE DATABASE businessDB;
+CREATE DATABASE businessDB;
 
 USE businessDB;
 
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS role (
     department_id INTEGER
 );
 
-CREATE TABLE IF™ NOT EXISTS department (
+CREATE TABLE IF NOT EXISTS department (
     id INTEGER AUTO_INCREMENT,
     primary key (id),
     name VARCHAR(30)

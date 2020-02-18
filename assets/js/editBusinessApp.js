@@ -149,7 +149,7 @@ async function updateEntity(type, field, isTable, isString) {
     if (isTable) {
         field === "manager" ? fieldTwo = "employee" : fieldTwo = field
         var fieldValue = await getEntity(fieldTwo, `Choose ${field} to apply to ${type}...`, entity.id)
-        if(!fieldValue) return displ("There are no managers to choose from.")
+        if(!fieldValue) return displ(`There are no ${field}s to choose from.`)
         var resp = await query(`UPDATE ${type} SET ${field}_id = ${fieldValue.id} WHERE ID = ${entity.id}`)
     } else {
         fieldQ = questions.updateQ[0]
