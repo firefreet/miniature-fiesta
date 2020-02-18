@@ -106,12 +106,14 @@ async function getEntity(type, question, selfID) {
 
 async function addEmployee() {
     var answers = await inquirer.prompt(questions.addEmployeeQuestion);
-    var { id } = await getEntity('role', 'Choose role to add');
-    await query("INSERT INTO employee (first_name,last_name,role_id) VALUES (?,?,?)",
+    var role = await getEntity('role', 'Choose role to add');
+    var manager = await getEntity('employee',"Select empployee's manager")
+    await query("INSERT INTO employee (first_name,last_name,role_id,manager_id) VALUES (?,?,?,?)",
         [
             answers.first_name,
             answers.last_name,
-            id
+            role.id,
+            manager.id
         ]);
     displ(`Added Employee: ${answers.first_name} ${answers.last_name}`);
 };
