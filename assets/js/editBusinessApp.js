@@ -180,6 +180,7 @@ async function updateEntity(type, field, isTable, isString) {
 
 async function deptSpend() {
     var dept = await getEntity("department",'Choose Department to display total spend')
+    if (!dept) { return displ(`There are no Depts to review. Please add one first.`) }
     var spend = await query("SELECT SUM(role.salary) FROM role INNER JOIN department ON role.department_id = department.id WHERE department.id = ?",dept.id)
     displ(dept.deptname + " expenditure = " + spend[0]["SUM(role.salary)"])
 }
