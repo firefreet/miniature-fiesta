@@ -39,7 +39,7 @@ async function viewEmployees(by) {
     switch (by) {
         case "department": {
             // ask user which department to filter on
-            bySelection = await getEntity("department", "Choose department to filter employees");
+            bySelection = await getEntity("department", "Choose department to filter employees", true);
             // create string to add to query which will do filtering
             if (bySelection) {
                 where = ` WHERE DeptName = ?`
@@ -48,7 +48,7 @@ async function viewEmployees(by) {
         }
             break;
         case "manager": {
-            bySelection = await getEntity("employee", "Choose person to see who works for them...");
+            bySelection = await getEntity("employee", "Choose person to see who works for them...", true);
             if (bySelection) {
                 where = ` WHERE emp.manager_id = ?`
                 value = bySelection.id
@@ -102,7 +102,7 @@ async function getEntity(type, question, forceChoice, whereID, caseEquals) {
     questions.getChoice[0].message = question;
     // prompt user with list
     var answer = await inquirer.prompt(questions.getChoice);
-    if (answer.choice === "Not at this time...") { return false }
+    if (answer.choice === "Not at this time...") { return null }
     // get just the role ID from the answer to the prompt
     var entityID = answer.choice.split(":");
     entityID = entityID[1];
@@ -118,27 +118,29 @@ async function getEntity(type, question, forceChoice, whereID, caseEquals) {
 async function addEmployee() {
     var answers = await inquirer.prompt(questions.addEmployeeQuestion);
     var role = await getEntity('role', 'Choose role to add');
-    var manager = await getEntity('employee', "Select empployee's manager")
-    await query("INSERT INTO employee (first_name,last_name,role_id,manager_id) VALUES (?,?,?,?)",
-        [
-            answers.first_name,
-            answers.last_name,
-            role.id,
-            manager.id
-        ]);
+    var manager = await getEntity('employee', "Select employee's manager")
+    var values = [
+        answers.first_name,
+        answers.last_name,
+        null,
+        null
+    ]
+    if (role) values[2] = role.id
+    if (manager) values[3] = manager.id
+    await query("INSERT INTO employee (first_name,last_name,role_id,manager_id) VALUES (?,?,?,?)", values);
     displ(`Added Employee: ${answers.first_name} ${answers.last_name}`);
 };
 
 async function addRole() {
     var answers = await inquirer.prompt(questions.addRoleQs)
     var { id } = await getEntity('department', 'Choose Dept to add...');
-    await query("INSERT INTO role (title,salary,department_id) VALUES (?,?,?)",
-        [
-            answers.titleName,
-            answers.salary,
-            id
-        ]
-    );
+    var values = [
+        answers.titleName,
+        answers.salary,
+        null
+    ]
+    if (id) values[2] = id
+    await query("INSERT INTO role (title,salary,department_id) VALUES (?,?,?)", values);
     displ("Adding role: " + answers.titleName);
 };
 
@@ -157,11 +159,11 @@ async function removeEntity(type) {
 };
 
 async function updateEntity(type, field, isTable, isString) {
-    var entity = await getEntity(type, `Choose ${type} to update...`,true);
+    var entity = await getEntity(type, `Choose ${type} to update...`, true);
     if (!entity) { return displ(`There are no ${type}s to update. Please add one first.`) }
     if (isTable) {
         field === "manager" ? fieldTwo = "employee" : fieldTwo = field
-        var fieldValue = await getEntity(fieldTwo, `Choose ${field} to apply to ${type}...`,true, entity.id, false)
+        var fieldValue = await getEntity(fieldTwo, `Choose ${field} to apply to ${type}...`, true, entity.id, false)
         if (!fieldValue) return displ(`There are no ${field}s to choose from.`)
         var resp = await query(`UPDATE ?? SET ?? = ? WHERE ID = ?`, [type, field + "_id", fieldValue.id, entity.id])
     } else {
@@ -182,14 +184,14 @@ async function updateEntity(type, field, isTable, isString) {
 }
 
 async function updateEmployeeDept() {
-    var employee = await getEntity('employee', `Choose employee to update...`,true);
+    var employee = await getEntity('employee', `Choose employee to update...`, true);
     if (!employee) { return displ(`There are no employees to update. Please add one first.`) }
     var empName = `${employee.last_name},${employee.first_name}`
-    var department = await getEntity('department', `Choose new department for ${empName}...`,true)
+    var department = await getEntity('department', `Choose new department for ${empName}...`, true)
     if (!department) return displ(`There are no departments to choose from.`)
-    var role = await getEntity('role', `Choose a role in the Dept: ${department.deptname} to apply to ${employee}`,true, department.id, true)
+    var role = await getEntity('role', `Choose a role in the Dept: ${department.deptname} to apply to ${employee}`, true, department.id, true)
     if (!role) return displ('There are no roles in this department to choose from')
-    var resp = await query(`UPDATE employee SET role_id = ? WHERE id = ?`, [role.id,employee.id])
+    var resp = await query(`UPDATE employee SET role_id = ? WHERE id = ?`, [role.id, employee.id])
     displ(`Updated ${empName} to Dept: ${department.deptname} with role:${role.title} `)
 }
 
