@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS role (
     department_id INTEGER
 );
 
+
 CREATE TABLE IF NOT EXISTS department (
-    id INTEGER AUTO_INCREMENT,
-    primary key (id),
-    deptname VARCHAR(30)
+  id INTEGER AUTO_INCREMENT PRIMARY KEY,
+  deptname VARCHAR(30)
 );

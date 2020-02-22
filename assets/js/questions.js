@@ -17,9 +17,6 @@ var toDoQuestion = [
         message: 'What would you like to do?',
         name: 'toDo',
         choices: [
-            // ADD Question before to break into Question sets
-            // based on Employee, Role, Department
-
             "View all employees",
             'View all employees by department',
             'View all employees by manager',
@@ -27,9 +24,6 @@ var toDoQuestion = [
             'Remove employee',
             'Update employee role',
             'Update employee manager',
-            // to do this one, have to select only depts with an associated role, 
-            // and have to then choose one of those roles... not sure I care that much.
-            // 'Update employee department',
             'View all roles',
             'Add role',
             'Remove role',
@@ -39,7 +33,7 @@ var toDoQuestion = [
             'Add department',
             'Remove department',
             'Update department name',
-            // 'View department total employee salary',
+            'View department total employee salary',
             'End'
         ]
     }

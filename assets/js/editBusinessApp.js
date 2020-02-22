@@ -34,7 +34,7 @@ function table(content) {
 async function viewEmployees(by) {
     var where = ""
     var bySelection
-    var id = ""
+    var value = ""
     // if passed a department filter parameter
     switch (by) {
         case "department": {
@@ -42,8 +42,8 @@ async function viewEmployees(by) {
             bySelection = await getEntity("department", "Choose department to filter employees");
             // create string to add to query which will do filtering
             if (bySelection) {
-                where = ` WHERE department.deptname = ?`
-                id = bySelection.id
+                where = ` WHERE DeptName = ?`
+                value = bySelection.deptname
             }
         }
             break;
@@ -51,17 +51,17 @@ async function viewEmployees(by) {
             bySelection = await getEntity("employee", "Choose person to see who works for them...");
             if (bySelection) {
                 where = ` WHERE emp.manager_id = ?`
-                id = bySelection.id
+                value = bySelection.id
             }
         }
     }
     // call query of employee database
     var data = await query(`SELECT emp.id AS ID, emp.first_name AS FirstName, 
             emp.last_name AS LastName, role.title AS Title, role.salary AS Salary, 
-            department.deptname DeptName, emp.manager_id AS MgrID, mgr.last_name AS MgrLastName
+            department.deptname AS DeptName, emp.manager_id AS MgrID, mgr.last_name AS MgrLastName
             FROM employee AS mgr RIGHT JOIN 
             employee emp ON mgr.id = emp.manager_ID LEFT JOIN role ON emp.role_id = role.id 
-            LEFT JOIN department ON role.department_id = department.id ${where}`, id);
+            LEFT JOIN department ON role.department_id = department.id ${where}`, value);
     // display returned values
     data.length > 0 ? table(data) : displ(`There are no employees for that selection at this time`);
 }
@@ -85,7 +85,7 @@ async function getEntity(type, question, selfID) {
     // 
     if (selfID) { var where = ` WHERE id <> ?` }
     // query table for all records
-    var records = await query(`SELECT * FROM ? ${where}`, [type, selfID]);
+    var records = await query(`SELECT * FROM ?? ${where}`, [type, selfID]);
     // transform returned list for prompt string display
     var choiceList = records.map(val => {
         switch (type) {
@@ -178,6 +178,11 @@ async function updateEntity(type, field, isTable, isString) {
     displ(`Updated ${type} with new ${field}: `)
 }
 
+async function deptSpend() {
+    var dept = await getEntity("department",'Choose Department to display total spend')
+    var spend = await query("SELECT SUM(role.salary) FROM role INNER JOIN department ON role.department_id = department.id WHERE department.id = ?",dept.id)
+    displ(dept.deptname + " expenditure = " + spend[0]["SUM(role.salary)"])
+}
 
 function startQs() {
     inquirer.prompt(questions.toDoQuestion)
@@ -215,6 +220,8 @@ function startQs() {
                 case 'Remove department': await removeEntity('department');
                     break;
                 case "Update department name": await updateEntity(`department`, `deptname`, false, true)
+                    break;
+                case "View department total employee salary": await deptSpend();
                     break;
                 case "End": conn.end();
                 default: moreQs = false
