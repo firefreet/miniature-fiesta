@@ -95,11 +95,13 @@ async function getEntity(type, question, selfID) {
         }
     });
     if (choiceList.length === 0) { return false }
+    choiceList.push("Do not update at this time")
     // update inquirer question list of choices and message
     questions.getChoice[0].choices = choiceList;
     questions.getChoice[0].message = question;
     // prompt user with list
     var answer = await inquirer.prompt(questions.getChoice);
+    if(answer.choice ==="Do not update at this time"){return false}
     // get just the role ID from the answer to the prompt
     var entityID = answer.choice.split(":");
     entityID = entityID[1];
