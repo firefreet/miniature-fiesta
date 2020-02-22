@@ -81,11 +81,12 @@ async function viewDepts() {
 }
 
 // prompts to choose from table
-async function getEntity(type, question, selfID) {
+async function getEntity(type, question, forceChoice, whereID, caseEquals) {
     // 
-    if (selfID) { var where = ` WHERE id <> ?` }
+    if (caseEquals === false) { var where = ` WHERE id <> ?` }
+    if (caseEquals === true) { var where = ' WHERE id = ?' }
     // query table for all records
-    var records = await query(`SELECT * FROM ?? ${where}`, [type, selfID]);
+    var records = await query(`SELECT * FROM ?? ${where}`, [type, whereID]);
     // transform returned list for prompt string display
     var choiceList = records.map(val => {
         switch (type) {
@@ -95,13 +96,13 @@ async function getEntity(type, question, selfID) {
         }
     });
     if (choiceList.length === 0) { return false }
-    choiceList.push("Do not update at this time")
+    if (!forceChoice) choiceList.push("Do not update at this time")
     // update inquirer question list of choices and message
     questions.getChoice[0].choices = choiceList;
     questions.getChoice[0].message = question;
     // prompt user with list
     var answer = await inquirer.prompt(questions.getChoice);
-    if(answer.choice ==="Do not update at this time"){return false}
+    if (answer.choice === "Not at this time...") { return false }
     // get just the role ID from the answer to the prompt
     var entityID = answer.choice.split(":");
     entityID = entityID[1];
@@ -156,11 +157,11 @@ async function removeEntity(type) {
 };
 
 async function updateEntity(type, field, isTable, isString) {
-    var entity = await getEntity(type, `Choose ${type} to update...`);
+    var entity = await getEntity(type, `Choose ${type} to update...`,true);
     if (!entity) { return displ(`There are no ${type}s to update. Please add one first.`) }
     if (isTable) {
         field === "manager" ? fieldTwo = "employee" : fieldTwo = field
-        var fieldValue = await getEntity(fieldTwo, `Choose ${field} to apply to ${type}...`, entity.id)
+        var fieldValue = await getEntity(fieldTwo, `Choose ${field} to apply to ${type}...`,true, entity.id, false)
         if (!fieldValue) return displ(`There are no ${field}s to choose from.`)
         var resp = await query(`UPDATE ?? SET ?? = ? WHERE ID = ?`, [type, field + "_id", fieldValue.id, entity.id])
     } else {
@@ -175,15 +176,27 @@ async function updateEntity(type, field, isTable, isString) {
         }
         fieldQ.message = `Please enter a new ${field} for the ${type}`
         var { fieldValue } = await inquirer.prompt(fieldQ)
-        var resp = await query(`UPDATE ?? SET ?? = ? WHERE ID = ?`, [type,field,fieldValue,entity.id])
+        var resp = await query(`UPDATE ?? SET ?? = ? WHERE ID = ?`, [type, field, fieldValue, entity.id])
     }
     displ(`Updated ${type} with new ${field}: `)
 }
 
+async function updateEmployeeDept() {
+    var employee = await getEntity('employee', `Choose employee to update...`,true);
+    if (!employee) { return displ(`There are no employees to update. Please add one first.`) }
+    var empName = `${employee.last_name},${employee.first_name}`
+    var department = await getEntity('department', `Choose new department for ${empName}...`,true)
+    if (!department) return displ(`There are no departments to choose from.`)
+    var role = await getEntity('role', `Choose a role in the Dept: ${department.deptname} to apply to ${employee}`,true, department.id, true)
+    if (!role) return displ('There are no roles in this department to choose from')
+    var resp = await query(`UPDATE employee SET role_id = ? WHERE id = ?`, [role.id,employee.id])
+    displ(`Updated ${empName} to Dept: ${department.deptname} with role:${role.title} `)
+}
+
 async function deptSpend() {
-    var dept = await getEntity("department",'Choose Department to display total spend')
+    var dept = await getEntity("department", 'Choose Department to display total spend')
     if (!dept) { return displ(`There are no Depts to review. Please add one first.`) }
-    var spend = await query("SELECT SUM(role.salary) FROM role INNER JOIN department ON role.department_id = department.id WHERE department.id = ?",dept.id)
+    var spend = await query("SELECT SUM(role.salary) FROM role INNER JOIN department ON role.department_id = department.id WHERE department.id = ?", dept.id)
     displ(dept.deptname + " expenditure = " + spend[0]["SUM(role.salary)"])
 }
 
@@ -194,7 +207,7 @@ function startQs() {
             switch (answers.toDo) {
                 case "View all employees": await viewEmployees();
                     break;
-                case "View all employees by department": await viewEmployees("department")
+                case "View all employees by department": await viewEmployees("department");
                     break;
                 case "View all employees by manager": await viewEmployees("manager");
                     break;
@@ -202,9 +215,11 @@ function startQs() {
                     break;
                 case "Remove employee": await removeEntity(`employee`);
                     break;
-                case "Update employee role": await updateEntity(`employee`, `role`, true)
+                case "Update employee role": await updateEntity(`employee`, `role`, true);
                     break;
-                case "Update employee manager": await updateEntity(`employee`, `manager`, true)
+                case "Update employee manager": await updateEntity(`employee`, `manager`, true);
+                    break;
+                case 'Update employee department': await updateEmployeeDept();
                     break;
                 case "View all roles": await viewRoles();
                     break;
@@ -212,9 +227,9 @@ function startQs() {
                     break;
                 case "Remove role": await removeEntity(`role`);
                     break;
-                case "Update role department": await updateEntity(`role`, `department`, true)
+                case "Update role department": await updateEntity(`role`, `department`, true);
                     break;
-                case "Update role salary": await updateEntity(`role`, `salary`, false, false)
+                case "Update role salary": await updateEntity(`role`, `salary`, false, false);
                     break;
                 case "View all departments": await viewDepts();
                     break;
@@ -222,7 +237,7 @@ function startQs() {
                     break;
                 case 'Remove department': await removeEntity('department');
                     break;
-                case "Update department name": await updateEntity(`department`, `deptname`, false, true)
+                case "Update department name": await updateEntity(`department`, `deptname`, false, true);
                     break;
                 case "View department total employee salary": await deptSpend();
                     break;

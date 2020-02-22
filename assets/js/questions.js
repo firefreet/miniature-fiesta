@@ -24,6 +24,7 @@ var toDoQuestion = [
             'Remove employee',
             'Update employee role',
             'Update employee manager',
+            'Update employee department',
             'View all roles',
             'Add role',
             'Remove role',
