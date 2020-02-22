@@ -33,18 +33,26 @@ function table(content) {
 // displays table of employees
 async function viewEmployees(by) {
     var where = ""
+    var bySelection
+    var id = ""
     // if passed a department filter parameter
     switch (by) {
         case "department": {
             // ask user which department to filter on
-            var dept = await getEntity("department", "Choose department to filter employees");
+            bySelection = await getEntity("department", "Choose department to filter employees");
             // create string to add to query which will do filtering
-            if (dept) where = ` WHERE department.deptname = "${dept.deptname}"`
+            if (bySelection) {
+                where = ` WHERE department.deptname = ?`
+                id = bySelection.id
+            }
         }
             break;
         case "manager": {
-            var manager = await getEntity("employee", "Choose person to see who works for them...");
-            if (manager) where = ` WHERE emp.manager_id = ${manager.id}`
+            bySelection = await getEntity("employee", "Choose person to see who works for them...");
+            if (bySelection) {
+                where = ` WHERE emp.manager_id = ?`
+                id = bySelection.id
+            }
         }
     }
     // call query of employee database
@@ -53,7 +61,7 @@ async function viewEmployees(by) {
             department.deptname DeptName, emp.manager_id AS MgrID, mgr.last_name AS MgrLastName
             FROM employee AS mgr RIGHT JOIN 
             employee emp ON mgr.id = emp.manager_ID LEFT JOIN role ON emp.role_id = role.id 
-            LEFT JOIN department ON role.department_id = department.id ${where}`);
+            LEFT JOIN department ON role.department_id = department.id ${where}`,id);
     // display returned values
     data.length > 0 ? table(data) : displ(`There are no employees for that selection at this time`);
 }
