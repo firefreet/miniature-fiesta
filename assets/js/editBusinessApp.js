@@ -96,7 +96,7 @@ async function getEntity(type, question, forceChoice, whereID, caseEquals) {
         }
     });
     if (choiceList.length === 0) { return false }
-    if (!forceChoice) choiceList.push("Do not update at this time")
+    if (!forceChoice) choiceList.push("Not at this time...")
     // update inquirer question list of choices and message
     questions.getChoice[0].choices = choiceList;
     questions.getChoice[0].message = question;
@@ -153,7 +153,8 @@ async function addDepartment() {
 
 async function removeEntity(type) {
     var entity = await getEntity(type, `Choose ${entity} to remove...`);
-    if (!entity) return displ(`There are no ${type}s to remove. Please add one first`)
+    if (entity === false) return displ(`There are no ${type}s to remove. Please add one first`)
+    if( entity === null) return displ(`Returning to menu...`)
     await query(`DELETE FROM ?? WHERE ?`, [type, { id: entity.id }]);
     displ(`Removed ${type} with ID ${entity.id}`);
 };
