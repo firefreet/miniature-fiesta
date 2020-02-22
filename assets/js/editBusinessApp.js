@@ -61,7 +61,7 @@ async function viewEmployees(by) {
             department.deptname DeptName, emp.manager_id AS MgrID, mgr.last_name AS MgrLastName
             FROM employee AS mgr RIGHT JOIN 
             employee emp ON mgr.id = emp.manager_ID LEFT JOIN role ON emp.role_id = role.id 
-            LEFT JOIN department ON role.department_id = department.id ${where}`,id);
+            LEFT JOIN department ON role.department_id = department.id ${where}`, id);
     // display returned values
     data.length > 0 ? table(data) : displ(`There are no employees for that selection at this time`);
 }
@@ -71,21 +71,21 @@ async function viewRoles() {
     var data = await query(`SELECT role.id AS RoleID, role.title, 
             role.salary, department.id AS DeptID, department.deptname AS DeptName
             FROM role LEFT JOIN department ON role.department_id = department.id`);
-    data.length > 0 ? table(data): displ(`There are no roles yet. Please add one first.`);
+    data.length > 0 ? table(data) : displ(`There are no roles yet. Please add one first.`);
 }
 
 // displays table of Departments
 async function viewDepts() {
     var data = await query(`SELECT * FROM department`);
-    data.length > 0  ? table(data) : displ("There are no departments yet. Please add one first");
+    data.length > 0 ? table(data) : displ("There are no departments yet. Please add one first");
 }
 
 // prompts to choose from table
 async function getEntity(type, question, selfID) {
     // 
-    if (selfID) { var where = ` WHERE id <> ${selfID}` }
+    if (selfID) { var where = ` WHERE id <> ?` }
     // query table for all records
-    var records = await query(`SELECT * FROM ${type} ${where}`);
+    var records = await query(`SELECT * FROM ? ${where}`, [type, selfID]);
     // transform returned list for prompt string display
     var choiceList = records.map(val => {
         switch (type) {
@@ -115,7 +115,7 @@ async function getEntity(type, question, selfID) {
 async function addEmployee() {
     var answers = await inquirer.prompt(questions.addEmployeeQuestion);
     var role = await getEntity('role', 'Choose role to add');
-    var manager = await getEntity('employee',"Select empployee's manager")
+    var manager = await getEntity('employee', "Select empployee's manager")
     await query("INSERT INTO employee (first_name,last_name,role_id,manager_id) VALUES (?,?,?,?)",
         [
             answers.first_name,
@@ -148,8 +148,8 @@ async function addDepartment() {
 
 async function removeEntity(type) {
     var entity = await getEntity(type, `Choose ${entity} to remove...`);
-    if(!entity) return displ(`There are no ${type}s to remove. Please add one first`)
-    await query(`DELETE FROM ${type} WHERE ?`, { id: entity.id });
+    if (!entity) return displ(`There are no ${type}s to remove. Please add one first`)
+    await query(`DELETE FROM ?? WHERE ?`, [type, { id: entity.id }]);
     displ(`Removed ${type} with ID ${entity.id}`);
 };
 
@@ -159,8 +159,8 @@ async function updateEntity(type, field, isTable, isString) {
     if (isTable) {
         field === "manager" ? fieldTwo = "employee" : fieldTwo = field
         var fieldValue = await getEntity(fieldTwo, `Choose ${field} to apply to ${type}...`, entity.id)
-        if(!fieldValue) return displ(`There are no ${field}s to choose from.`)
-        var resp = await query(`UPDATE ${type} SET ${field}_id = ${fieldValue.id} WHERE ID = ${entity.id}`)
+        if (!fieldValue) return displ(`There are no ${field}s to choose from.`)
+        var resp = await query(`UPDATE ?? SET ?? = ? WHERE ID = ?`, [type, field + "_id", fieldValue.id, entity.id])
     } else {
         fieldQ = questions.updateQ[0]
         if (!isString) {
@@ -173,7 +173,7 @@ async function updateEntity(type, field, isTable, isString) {
         }
         fieldQ.message = `Please enter a new ${field} for the ${type}`
         var { fieldValue } = await inquirer.prompt(fieldQ)
-        var resp = await query(`UPDATE ${type} SET ${field} = ? WHERE ID = ${entity.id}`, fieldValue)
+        var resp = await query(`UPDATE ?? SET ?? = ? WHERE ID = ?`, [type,field,fieldValue,entity.id])
     }
     displ(`Updated ${type} with new ${field}: `)
 }
