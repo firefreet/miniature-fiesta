@@ -1,8 +1,8 @@
 var inquirer = require('inquirer');
 var mysql = require('mysql');
 var consoleTable = require('console.table');
-var questions = require('./questions.js');
-var password = require('./password.js');
+var questions = require('./assets/js/questions.js');
+var password = require('./assets/js/password.js');
 var util = require('util');
 
 // set up connection to mySQL database
@@ -258,19 +258,3 @@ async function init() {
 
 };
 init();
-
-// don't forget to end the connection -- connect.end();
-
-module.exports = {
-    viewEmployees: viewEmployees,
-    viewRoles: viewRoles,
-    viewDepts: viewDepts,
-    getEntity: getEntity,
-    addEmployee: addEmployee,
-    addRole: addRole,
-    addDepartment: addDepartment,
-    removeEntity: removeEntity,
-    startQs: startQs,
-    connect: connect,
-    conn: conn
-}

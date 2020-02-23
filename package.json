@@ -2,7 +2,7 @@
   "name": "miniature-fiesta",
   "version": "1.0.0",
   "description": "application to allow CRUD of business employee database from CLI",
-  "main": "./assets/js/editBusinessApp.js",
+  "main": "./editBusinessApp.js",
   "directories": {
     "test": "test"
   },
